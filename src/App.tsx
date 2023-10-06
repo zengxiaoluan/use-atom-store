@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Component, useState } from "react";
 import "./App.css";
 
 function App() {
@@ -12,39 +12,57 @@ export default App;
 import { ABStore } from "./use-ab-store";
 
 export function A() {
-  let count = countStore.useStore();
-  console.log(count);
+  let store = countStore.useStore();
+  console.log(store);
 
   return (
     <>
+      {store.display && "sdfsf"}
       <button
         onClick={() => {
-          countStore.inc(2);
+          countStore.inc(1);
         }}
       >
-        click {count.count}
+        inc {store.count}
       </button>
+
+      <button
+        onClick={() => {
+          countStore.inc(-1);
+        }}
+      >
+        dec {store.count}
+      </button>
+
       <Comp></Comp>
     </>
   );
 }
 
 function Comp() {
-  let count = countStore.useStore();
+  let store = countStore.useStore();
 
-  return <div>display state:{count.count}</div>;
+  return <div>display state:{store.count}</div>;
 }
 
-type Compute<T extends any> = T extends Object ? { [P in keyof T]: T[P] } : any;
+function createCountStore<T>(state: T) {
+  let m = {
+    inc(step: number, state?: T) {
+      if (state) (state as any).count += step;
 
-class CountStore<T extends Object> extends ABStore<T> {
-  constructor(state: T) {
-    super(state);
-  }
+      if (state.count % 2) {
+        state.display = false;
+      } else {
+        state.display = true;
+      }
+    },
+  };
 
-  inc(step: number) {
-    (this.state as T).count += step;
-  }
+  let store = new ABStore<T, typeof m>(state, m);
+
+  type A = typeof store & typeof m;
+
+  return store as unknown as A;
 }
 
-let countStore = new CountStore({ count: 0 });
+let countStore = createCountStore({ count: 0, display: true });

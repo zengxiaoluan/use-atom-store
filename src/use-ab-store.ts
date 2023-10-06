@@ -1,14 +1,14 @@
 import { useSyncExternalStore } from "react";
 
-export abstract class ABStore<T extends Object> {
-  protected state = new Proxy<T>({} as T, {});
-  private retState: any;
+export class ABStore<T extends any, P extends { [k: string]: (...args: any) => void }> {
+  protected proxy!: T;
+  private state: T;
 
   private initState(v: T) {
     let that = this;
 
-    this.state = new Proxy(
-      { ...v },
+    this.proxy = new Proxy(
+      { ...(v as any) },
 
       {
         get(target, prop, receiver) {
@@ -18,7 +18,7 @@ export abstract class ABStore<T extends Object> {
         set(target, prop, v, receiver) {
           let temp = Reflect.set(target, prop, v, receiver);
 
-          that.retState = {
+          that.state = {
             ...target,
           };
 
@@ -30,14 +30,23 @@ export abstract class ABStore<T extends Object> {
     );
   }
 
-  constructor(state: T) {
+  constructor(state: T, methods: P) {
+    this.state = state;
     this.initState(state);
+
+    for (const key in methods) {
+      let fn = methods[key];
+
+      (this as any)[key] = (...args: any) => {
+        return fn(...args, this.proxy);
+      };
+    }
   }
 
   private listener = new Set<any>();
 
   private getSnapshot() {
-    return this.retState || this.state;
+    return this.state;
   }
 
   private emitChange() {
@@ -52,11 +61,8 @@ export abstract class ABStore<T extends Object> {
     };
   }
 
-  useStore() {
-    let state = useSyncExternalStore(
-      this.subscribe.bind(this),
-      this.getSnapshot.bind(this)
-    );
+  useStore(): T {
+    let state = useSyncExternalStore(this.subscribe.bind(this), this.getSnapshot.bind(this));
 
     return state;
   }
