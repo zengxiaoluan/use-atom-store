@@ -1,68 +1,58 @@
-import { Component, useState } from "react";
+import { memo, useCallback } from "react";
 import "./App.css";
+import { createAtomStore, useAtomStore } from "./use-atom-store";
+
+let countStore = createAtomStore({ count: 0, str: "-" });
 
 function App() {
-  const [count, setCount] = useState(0);
-
-  return <A></A>;
-}
-
-export default App;
-
-import { ABStore } from "./use-ab-store";
-
-export function A() {
-  let store = countStore.useStore();
-  console.log(store);
+  let [state, setState] = useAtomStore(countStore);
 
   return (
-    <>
-      {store.display && "sdfsf"}
+    <div>
       <button
         onClick={() => {
-          countStore.inc(1);
+          setState((prev) => {
+            return { ...prev, str: prev.str + "-" };
+          });
         }}
       >
-        inc {store.count}
+        {state.str}
+        {state.count}
       </button>
-
-      <button
-        onClick={() => {
-          countStore.inc(-1);
-        }}
-      >
-        dec {store.count}
-      </button>
-
-      <Comp></Comp>
-    </>
+      <A></A>
+    </div>
   );
 }
 
+let A = memo(function A() {
+  let [state, setState] = useAtomStore(countStore, (state) => ({
+    count: state.count,
+  }));
+  console.log(state);
+
+  return (
+    <>
+      <button
+        onClick={() => {
+          setState((prev) => {
+            return { ...prev, count: prev.count + 1 };
+          });
+        }}
+      >
+        click {state.count}
+      </button>
+      <Comp></Comp>
+    </>
+  );
+});
+
 function Comp() {
-  let store = countStore.useStore();
+  let [{ count }] = useAtomStore(countStore, (state) => ({
+    count: state.count,
+  }));
+  console.log(count);
 
-  return <div>display state:{store.count}</div>;
+  return <div>display state:{count}</div>;
 }
 
-function createCountStore<T>(state: T) {
-  let m = {
-    inc(step: number, state?: T) {
-      if (state) (state as any).count += step;
-
-      if (state.count % 2) {
-        state.display = false;
-      } else {
-        state.display = true;
-      }
-    },
-  };
-
-  let store = new ABStore<T, typeof m>(state, m);
-
-  type A = typeof store & typeof m;
-
-  return store as unknown as A;
-}
-
-let countStore = createCountStore({ count: 0, display: true });
+export default App;
