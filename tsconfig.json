@@ -13,7 +13,7 @@
     "isolatedModules": true,
     "noEmit": false,
     "declaration": true,
-    "emitDeclarationOnly": true,
+    "emitDeclarationOnly": false,
     "declarationDir": "dist",
     "jsx": "react-jsx",
     "outDir": "dist",

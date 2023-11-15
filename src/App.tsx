@@ -1,4 +1,4 @@
-import { memo, useCallback } from "react";
+import { memo } from "react";
 import "./App.css";
 import { createAtomStore, useAtomStore } from "./use-atom-store";
 
