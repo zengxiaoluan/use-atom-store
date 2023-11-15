@@ -1,4 +1,4 @@
-# use-ab-store
+# use-atom-store
 
 ```shell
 npm i use-atom-store -S
