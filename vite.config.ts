@@ -6,8 +6,9 @@ export default defineConfig({
   plugins: [react()],
   build: {
     lib: {
-      entry: "./src/use-ab-store.tsx",
+      entry: "./src/use-atom-store.ts",
       formats: ["umd"],
+      name: "index",
     },
   },
 });
