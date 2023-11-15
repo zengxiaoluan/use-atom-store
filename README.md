@@ -1,10 +1,12 @@
 # use-ab-store
 
-`npm i use-atom-store -S`
+```shell
+npm i use-atom-store -S
+```
 
 You can use is like:
 
-```react
+```jsx
 import { createAtomStore, useAtomStore } from 'use-atom-store'
 
 let myStore = createAtomStore({ count: 0, hello: 'hello' }) // create a store
