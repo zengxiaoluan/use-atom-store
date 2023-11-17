@@ -1,4 +1,5 @@
 import { useMemo, useSyncExternalStore } from "react";
+export * from "./use-atom-store-auto";
 
 let count = 0;
 class AtomStore<T = {}> {

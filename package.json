@@ -1,6 +1,6 @@
 {
   "name": "use-atom-store",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "type": "module",
   "main": "./dist/use-atom-store.js",
   "types": "./dist/use-atom-store.d.ts",

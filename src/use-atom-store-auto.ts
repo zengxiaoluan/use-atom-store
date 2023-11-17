@@ -1,53 +1,57 @@
 import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 
-let mapTrack = new WeakMap();
+let mapTrackProxy = new WeakMap();
 let mapProxy2Target = new WeakMap();
-
 let subscribeMap = new WeakMap();
 let listenerMap = new WeakMap();
 
-export function createAutoStore<T extends Object>(
-  store: T,
-  affected = new Set<string>()
+export function createAutoStore<T extends Record<string, any> = {}>(store: T) {
+  return createProxy(store);
+}
+
+function createProxy<T extends Record<string, any> = {}>(
+  target: T,
+  affected?: Set<string>
 ) {
   const handler = {
     get(target: T, prop: keyof T) {
-      affected.add(prop as any);
-      //   console.warn(prop, keys);
+      affected?.add(prop as any);
 
       return target[prop];
     },
 
     set(target: T, prop: keyof T, value: any) {
+      if (affected?.size) return false;
+
       target[prop] = value;
 
-      for (const fn of listenerMap.get(proxy)) {
-        fn();
-      }
+      for (const fn of listenerMap.get(proxy)) fn();
 
       return true;
     },
   };
 
-  let proxy = new Proxy(store, handler);
+  let proxy = new Proxy(target, handler as any);
 
-  mapTrack.set(proxy, true);
-  mapProxy2Target.set(proxy, store);
-  subscribeMap.set(
-    proxy,
-    (() => {
-      let lis = new Set();
-      listenerMap.set(proxy, lis);
+  if (!affected) {
+    mapTrackProxy.set(proxy, true);
+    mapProxy2Target.set(proxy, target);
+    subscribeMap.set(
+      proxy,
+      (() => {
+        let lis = new Set();
+        listenerMap.set(proxy, lis);
 
-      return (fn: any) => {
-        lis.add(fn);
+        return (fn: any) => {
+          lis.add(fn);
 
-        return () => {
-          lis.delete(fn);
+          return () => {
+            lis.delete(fn);
+          };
         };
-      };
-    })()
-  );
+      })()
+    );
+  }
 
   return proxy;
 }
@@ -55,7 +59,7 @@ export function createAutoStore<T extends Object>(
 export function useAutoStore<T extends ReturnType<typeof createAutoStore>>(
   proxy: T
 ) {
-  if (!mapTrack.has(proxy)) throw new Error("Plz check code");
+  if (!mapTrackProxy.has(proxy)) throw new Error("Plz check code");
 
   let isRender = true;
   useSyncExternalStore(
@@ -83,12 +87,12 @@ export function useAutoStore<T extends ReturnType<typeof createAutoStore>>(
   );
   isRender = false;
 
-  let curAffected = new Set<string>();
-  let lastAffected = useRef<Set<string>>();
+  let curAffected = new Set<string>([]);
+  let lastAffected = useRef<Set<string>>(curAffected);
 
   useEffect(() => {
     lastAffected.current = curAffected;
   });
 
-  return createAutoStore(mapProxy2Target.get(proxy), curAffected);
+  return createProxy(mapProxy2Target.get(proxy), curAffected) as T;
 }

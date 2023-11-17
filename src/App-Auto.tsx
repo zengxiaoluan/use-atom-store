@@ -1,53 +1,55 @@
 import { memo } from "react";
 import "./App.css";
-import { createAutoStore, useAutoStore } from "./use-atom-store-auto";
+import { createAutoStore, useAutoStore } from "./use-atom-store";
 
-let testAutoStore = createAutoStore({ a: 1, b: 2 });
+let testAutoStore = createAutoStore({ a: 1, b: 2, c: 3 });
 
 function App() {
   let state = useAutoStore(testAutoStore);
-  console.log("render a: App");
+  console.log("render A/B/C");
+
+  state.a;
+  state.b;
+  state.c;
 
   return (
     <div>
       <button
         onClick={() => {
-          testAutoStore.a++;
+          state.a++;
         }}
       >
-        a{state.a}
+        parent
       </button>
       <A></A>
+      <B></B>
+      <C></C>
     </div>
   );
 }
 
 let A = memo(function A() {
   let state = useAutoStore(testAutoStore);
+  console.log("render A");
 
-  console.log("render b: A");
-
-  return (
-    <>
-      <button
-        onClick={() => {
-          testAutoStore.b++;
-        }}
-      >
-        b{state.b}
-      </button>
-      {/* <Comp></Comp> */}
-    </>
-  );
+  return <button onClick={() => testAutoStore.a++}>a{state.a}</button>;
 });
 
-function Comp() {
+let B = memo(function B() {
   let state = useAutoStore(testAutoStore);
-  console.log("render a: Comp");
+  console.log("render B");
 
-  if (state.a > 5 && state.a < 10) return <></>;
+  return <button onClick={() => testAutoStore.b++}>b{state.b}</button>;
+});
 
-  return <div>display state a:{state.a}</div>;
-}
+let C = memo(function C() {
+  let state = useAutoStore(testAutoStore);
+  console.log("render C");
+
+  if (state.c > 5 && state.c < 10)
+    return <button onClick={() => testAutoStore.c--}>c{state.c}</button>;
+
+  return <button onClick={() => testAutoStore.c++}>c{state.c}</button>;
+});
 
 export default App;
